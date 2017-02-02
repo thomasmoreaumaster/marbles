@@ -289,7 +289,7 @@ func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []s
 	user := strings.ToLower(args[3])
 	state, err := strconv.Atoi(args[2])
 	timestamp := time.Now()
-	timestamp := time.Now()
+	timestampl := time.Now()
 	if err != nil {
 		return nil, errors.New("3rd argument must be a numeric string")
 	}
