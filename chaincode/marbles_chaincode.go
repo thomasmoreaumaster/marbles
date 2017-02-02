@@ -40,8 +40,6 @@ var openTradesStr = "_opentrades"   //name for the key/value that will store all
 type Marble struct {
 	Name        string `json:"name"`        //the fieldtags are needed to keep case from bouncing around
 	Description string `json:"description"` //the fieldtags are needed to keep case from bouncing around
-	Timestamp   int64  `json:"timestamp"`   //utc timestamp of creation
-	Timestampl  int64  `json:"timestampl"`  //utc timestamp of limite
 	State       int    `json:"state"`
 	User        string `json:"user"`
 }
