@@ -469,11 +469,11 @@ func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args [
 			json.Unmarshal(marbleAsBytes, &closersMarble) //un stringify it aka JSON.parse()
 
 			//verify if marble meets trade requirements
-			if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
+			/*if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
 				msg := "marble in input does not meet trade requriements"
 				fmt.Println(msg)
 				return nil, errors.New(msg)
-			}
+			}*/
 
 			marble, e := findMarble4Trade(stub, trades.OpenTrades[i].User, args[4], size) //find a marble that is suitable from opener
 			if e == nil {
