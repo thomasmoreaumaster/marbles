@@ -38,10 +38,10 @@ var marbleIndexStr = "_marbleindex" //name for the key/value that will store a l
 var openTradesStr = "_opentrades"   //name for the key/value that will store all open trades
 
 type Marble struct {
-	Name        string `json:"name"`        //the fieldtags are needed to keep case from bouncing around
-	Description string `json:"description"` //the fieldtags are needed to keep case from bouncing around
-	State       int    `json:"state"`
-	User        string `json:"user"`
+	Name  string `json:"name"` //the fieldtags are needed to keep case from bouncing around
+	Color string `json:"color"`
+	Size  int    `json:"size"`
+	User  string `json:"user"`
 }
 
 type Description struct {
@@ -133,7 +133,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return res, err
 	} else if function == "write" { //writes a value to the chaincode state
 		return t.Write(stub, args)
-	} else if function == "marble" { //create a new marble
+	} else if function == "init_marble" { //create a new marble
 		return t.init_marble(stub, args)
 	} else if function == "set_user" { //change owner of a marble
 		res, err := t.set_user(stub, args)
@@ -256,17 +256,10 @@ func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []s
 	var err error
 
 	//   0       1       2     3
-	// "nom", "desc", "state", "bob"
+	// "asdf", "blue", "35", "bob"
 	if len(args) != 4 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 4")
 	}
-
-	//Name        string `json:"name"`        //the fieldtags are needed to keep case from bouncing around
-	//Description string `json:"description"` //the fieldtags are needed to keep case from bouncing around
-	//Timestamp   int64  `json:"timestamp"`   //utc timestamp of creation
-	//Timestampl  int64  `json:"timestampl"`  //utc timestamp of limite
-	//State       int    `json:"state"`
-	//User        string `json:"user"
 
 	//input sanitation
 	fmt.Println("- start init marble")
@@ -283,9 +276,9 @@ func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []s
 		return nil, errors.New("4th argument must be a non-empty string")
 	}
 	name := args[0]
-	description := strings.ToLower(args[1])
+	color := strings.ToLower(args[1])
 	user := strings.ToLower(args[3])
-	state, err := strconv.Atoi(args[2])
+	size, err := strconv.Atoi(args[2])
 	if err != nil {
 		return nil, errors.New("3rd argument must be a numeric string")
 	}
@@ -304,7 +297,7 @@ func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []s
 	}
 
 	//build the marble json string manually
-	str := `{"name": "` + name + `","description": "` + description + `", "state": ` + strconv.Itoa(state) + `, "user": "` + user + `"}`
+	str := `{"name": "` + name + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "user": "` + user + `"}`
 	err = stub.PutState(name, []byte(str)) //store marble with id as key
 	if err != nil {
 		return nil, err
@@ -474,11 +467,11 @@ func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args [
 			json.Unmarshal(marbleAsBytes, &closersMarble) //un stringify it aka JSON.parse()
 
 			//verify if marble meets trade requirements
-			/*if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
+			if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
 				msg := "marble in input does not meet trade requriements"
 				fmt.Println(msg)
 				return nil, errors.New(msg)
-			}*/
+			}
 
 			marble, e := findMarble4Trade(stub, trades.OpenTrades[i].User, args[4], size) //find a marble that is suitable from opener
 			if e == nil {
@@ -528,11 +521,11 @@ func findMarble4Trade(stub shim.ChaincodeStubInterface, user string, color strin
 		//fmt.Println("looking @ " + res.User + ", " + res.Color + ", " + strconv.Itoa(res.Size));
 
 		//check for user && color && size
-		/*if strings.ToLower(res.User) == strings.ToLower(user) && strings.ToLower(res.Color) == strings.ToLower(color) && res.Size == size {
+		if strings.ToLower(res.User) == strings.ToLower(user) && strings.ToLower(res.Color) == strings.ToLower(color) && res.Size == size {
 			fmt.Println("found a marble: " + res.Name)
 			fmt.Println("! end find marble 4 trade")
 			return res, nil
-		}*/
+		}
 	}
 
 	fmt.Println("- end find marble 4 trade - error")
