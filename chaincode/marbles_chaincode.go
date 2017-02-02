@@ -1,5 +1,5 @@
 /*
-Hight  Licensed to the Apache Software Foundation (ASF) under one
+Hight Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
 regarding copyright ownership.  The ASF licenses this file
@@ -38,10 +38,10 @@ var marbleIndexStr = "_marbleindex" //name for the key/value that will store a l
 var openTradesStr = "_opentrades"   //name for the key/value that will store all open trades
 
 type Marble struct {
-	Name   string `json:"name"` //the fieldtags are needed to keep case from bouncing around
-	Resume string `json:"resume"`
-	Size   int    `json:"size"`
-	User   string `json:"user"`
+	Name  string `json:"name"` //the fieldtags are needed to keep case from bouncing around
+	Color string `json:"color"`
+	Size  int    `json:"size"`
+	User  string `json:"user"`
 }
 
 type Description struct {
@@ -467,7 +467,7 @@ func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args [
 			json.Unmarshal(marbleAsBytes, &closersMarble) //un stringify it aka JSON.parse()
 
 			//verify if marble meets trade requirements
-			if closersMarble.Resume != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
+			if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
 				msg := "marble in input does not meet trade requriements"
 				fmt.Println(msg)
 				return nil, errors.New(msg)
@@ -518,10 +518,10 @@ func findMarble4Trade(stub shim.ChaincodeStubInterface, user string, color strin
 		}
 		res := Marble{}
 		json.Unmarshal(marbleAsBytes, &res) //un stringify it aka JSON.parse()
-		//fmt.Println("looking @ " + res.User + ", " + res.Resume + ", " + strconv.Itoa(res.Size));
+		//fmt.Println("looking @ " + res.User + ", " + res.Color + ", " + strconv.Itoa(res.Size));
 
 		//check for user && color && size
-		if strings.ToLower(res.User) == strings.ToLower(user) && strings.ToLower(res.Resume) == strings.ToLower(color) && res.Size == size {
+		if strings.ToLower(res.User) == strings.ToLower(user) && strings.ToLower(res.Color) == strings.ToLower(color) && res.Size == size {
 			fmt.Println("found a marble: " + res.Name)
 			fmt.Println("! end find marble 4 trade")
 			return res, nil
