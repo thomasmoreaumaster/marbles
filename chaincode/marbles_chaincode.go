@@ -304,7 +304,7 @@ func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []s
 	}
 
 	//build the marble json string manually
-	str := `{"name": "` + name + `", "size": ` + strconv.Itoa(state) + `, "user": "` + user + `"}`
+	str := `{"name": "` + name + `","description": "` + description + `", "state": ` + strconv.Itoa(state) + `, "user": "` + user + `"}`
 	err = stub.PutState(name, []byte(str)) //store marble with id as key
 	if err != nil {
 		return nil, err
