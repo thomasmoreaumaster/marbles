@@ -266,7 +266,7 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 	if err != nil {
 		return nil, errors.New("Failed to get openscrutin")
 	}
-	var views = AllScrutinViews
+	var views = AllScrutinViews{}
 	json.Unmarshal(opensAsBytes, &views) //un stringify it aka JSON.parse()
 
 	views.OpenScrutins = append(views.OpenScrutins, open) //append to open trades
@@ -278,4 +278,8 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 	}
 	fmt.Println("- end open trade")
 	return nil, nil
+}
+
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
