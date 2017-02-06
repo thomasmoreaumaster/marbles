@@ -17,6 +17,7 @@ type SimpleChaincode struct {
 
 var scrutinIndexStr = "_scrutinindex" //name for the key/value that will store a list of all known marbles
 var openScrutinStr = "_openscrutins"  //name for the key/value that will store all open trades
+var voteIndexStr = "_voteindex"       //name for the key/value that will store all votes
 
 type Scrutin struct {
 	Name        string `json:"name"` //the fieldtags are needed to keep case from bouncing around
@@ -32,6 +33,17 @@ type AnOpenScrutin struct {
 
 type AllScrutinViews struct {
 	OpenScrutins []AnOpenScrutin `json:"open_scrutins"`
+}
+
+type AVote struct {
+	Name      string   `json:"name"`      //the fieldtags are needed to keep case from bouncing around
+	Users     []string `json:"users"`      //user who created the open trade order
+	Timestamp int64    `json:"timestamp"` //utc timestamp of creation
+	Count     int      `json:"count"`
+}
+
+type AllVotes struct {
+	Votes []Vote `json:"votes"`
 }
 
 // ============================================================================================================================
@@ -81,6 +93,13 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 
+	var votes AllVotes
+	jsonAsBytes, _ = json.Marshal(votes) //clear the votes struct
+	err = stub.PutState(voteIndexStr, jsonAsBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
@@ -107,6 +126,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.init_scrutin(stub, args)
 	} else if function == "open_scrutin" { //create a new trade order
 		return t.open_scrutin(stub, args)
+	} else if function == "init_vote" { //create a new marble
+		return t.init_vote(stub, args)
 	} /*else if function == "perform_view" { //forfill an open trade order
 		res, err := t.perform_view(stub, args)
 		cleanScrutins(stub) //lets clean just in case
@@ -250,7 +271,7 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 
 	//	0        1      2     3      4      5       6
 	//["bob", "blue", "16", "red", "16"] *"blue", "35*
-	if len(args) != 3 {
+	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting like 3")
 	}
 
@@ -280,6 +301,69 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 	fmt.Println("- end open trade")
 	return nil, nil
 }
+
+// ============================================================================================================================
+// Init Marble - create a new marble, store into chaincode state
+// ============================================================================================================================
+func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+
+	//   0       1       2     3
+	// "asdf", "blue", "35", "bob"
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 4")
+	}
+
+	//input sanitation
+	fmt.Println("- start init marble")
+	if len(args[0]) <= 0 {
+		return nil, errors.New("1st argument must be a non-empty string")
+	}
+	
+	name := args[0]
+	
+	//check if marble already exists
+	voteAsBytes, err := stub.GetState(name)
+	if err != nil {
+		return nil, errors.New("Failed to get vote name")
+	}
+	res := AVote{}
+	
+	json.Unmarshal(voteAsBytes, &res)
+	if res.Name == name {
+		fmt.Println("This vote arleady exists: " + name)
+		fmt.Println(res)
+		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
+	}
+	users := []string
+	timestamp = makeTimestamp() //use timestamp as an ID
+	count := 0
+	
+	//build the marble json string manually
+	str := `{"name": "` + name + `", "users": "` + users + `","timestamp": "` + timestamp + `", "count": "` + count + `"}`
+	err = stub.PutState(name, []byte(str)) //store marble with id as key
+	if err != nil {
+		return nil, err
+	}
+
+	//get the marble index
+	votesAsBytes, err := stub.GetState(voteIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get vote index")
+	}
+	var voteIndex []string
+	json.Unmarshal(votesAsBytes, &voteIndex) //un stringify it aka JSON.parse()
+
+	//append
+	voteIndex = append(voteIndex, name) //add marble name to index list
+	fmt.Println("! vote index: ", voteIndex)
+	jsonAsBytes, _ := json.Marshal(voteIndex)
+	err = stub.PutState(voteIndexStr, jsonAsBytes) //store name of marble
+
+	fmt.Println("- end init scrutin")
+	return nil, nil
+}
+
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
