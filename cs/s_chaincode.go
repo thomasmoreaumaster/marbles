@@ -188,8 +188,10 @@ func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []s
 	if err != nil {
 		return nil, errors.New("Failed to get marble index")
 	}
+	var marbleIndex []string
+	json.Unmarshal(valAsbytes, &marbleIndex) //un stringify it aka JSON.parse()
 
-	return valAsbytes, nil //send it onward
+	return marbleIndex, nil //send it onward
 }
 
 // ============================================================================================================================
