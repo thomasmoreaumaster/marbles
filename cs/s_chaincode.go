@@ -336,8 +336,8 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
 	var users []string
-	timestamp = makeTimestamp() //use timestamp as an ID
-	count := 0
+	var timestamp := makeTimestamp() //use timestamp as an ID
+	var count := 0
 
 	//build the marble json string manually
 	str := `{"name": "` + name + `", "users": "` + users + `","timestamp": "` + timestamp + `", "count": "` + count + `"}`
