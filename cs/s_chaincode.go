@@ -246,7 +246,8 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	res.Votes = votes
 	res.User = user
 
-	err = stub.PutState(name, []byte(res)) //store marble with id as key
+	jsonAsBytes, _ := json.Marshal(res)
+	err = stub.PutState(name, jsonAsBytes) //rewrite the marble with id as key
 	if err != nil {
 		return nil, err
 	}
