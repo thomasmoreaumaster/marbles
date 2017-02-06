@@ -24,6 +24,7 @@ type Scrutin struct {
 }
 
 type AnOpenScrutin struct {
+	Name      string `json:"name"`      //the fieldtags are needed to keep case from bouncing around
 	User      string `json:"user"`      //user who created the open trade order
 	Timestamp int64  `json:"timestamp"` //utc timestamp of creation
 }
@@ -103,13 +104,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Write(stub, args)
 	} else if function == "init_scrutin" { //create a new marble
 		return t.init_scrutin(stub, args)
-	} /*else if function == "set_user" { //change owner of a marble
-		res, err := t.set_user(stub, args)
-		cleanScrutins(stub) //lets make sure all open trades are still valid
-		return res, err
 	} else if function == "open_scrutin" { //create a new trade order
 		return t.open_scrutin(stub, args)
-	} else if function == "perform_view" { //forfill an open trade order
+	} /*else if function == "perform_view" { //forfill an open trade order
 		res, err := t.perform_view(stub, args)
 		cleanScrutins(stub) //lets clean just in case
 		return res, err
@@ -241,5 +238,46 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	err = stub.PutState(scrutinIndexStr, jsonAsBytes) //store name of marble
 
 	fmt.Println("- end init scrutin")
+	return nil, nil
+}
+
+// ============================================================================================================================
+// Open Trade - create an open trade for a marble you want with marbles you have
+// ============================================================================================================================
+func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	var will_size int
+	var trade_away Description
+
+	//	0        1      2     3      4      5       6
+	//["bob", "blue", "16", "red", "16"] *"blue", "35*
+	if len(args) != 3 {
+		return nil, errors.New("Incorrect number of arguments. Expecting like 3")
+	}
+
+	open := AnOpenScrutin{}
+	open.Name = args[0]
+	open.User = args[1]
+	open.Timestamp = makeTimestamp() //use timestamp as an ID
+	fmt.Println("- start open trade")
+	jsonAsBytes, _ := json.Marshal(open)
+	err = stub.PutState("_debug1", jsonAsBytes)
+
+	//get the open trade struct
+	opensAsBytes, err := stub.GetState(openScrutinStr)
+	if err != nil {
+		return nil, errors.New("Failed to get openscrutin")
+	}
+	var views = AllScrutinViews
+	json.Unmarshal(opensAsBytes, &views) //un stringify it aka JSON.parse()
+
+	views.OpenScrutins = append(views.OpenScrutins, open) //append to open trades
+	fmt.Println("! appended open to trades")
+	jsonAsBytes, _ = json.Marshal(views)
+	err = stub.PutState(openScrutinStr, jsonAsBytes) //rewrite open orders
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("- end open trade")
 	return nil, nil
 }
