@@ -308,60 +308,37 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 
-	//   0       1       2     3
-	// "asdf", "blue", "35", "bob"
+	//	0        1      2     3      4      5       6
+	//["bob", "blue", "16", "red", "16"] *"blue", "35*
 	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 4")
+		return nil, errors.New("Incorrect number of arguments. Expecting like 3")
 	}
 
-	//input sanitation
-	fmt.Println("- start init marble")
-	if len(args[0]) <= 0 {
-		return nil, errors.New("1st argument must be a non-empty string")
-	}
+	open := AVote{}
+	open.Name = args[0]
+	open.User = []string
+	open.Count = 0
+	open.Timestamp = makeTimestamp() //use timestamp as an ID
+	fmt.Println("- start open trade")
+	jsonAsBytes, _ := json.Marshal(open)
+	err = stub.PutState("_debug1", jsonAsBytes)
 
-	name := args[0]
-
-	//check if marble already exists
-	voteAsBytes, err := stub.GetState(name)
+	//get the open trade struct
+	votesAsBytes, err := stub.GetState(voteIndexStr)
 	if err != nil {
-		return nil, errors.New("Failed to get vote name")
+		return nil, errors.New("Failed to get openscrutin")
 	}
-	res := AVote{}
+	var allvotes = AllVotes{}
+	json.Unmarshal(votesAsBytes, &allvotes) //un stringify it aka JSON.parse()
 
-	json.Unmarshal(voteAsBytes, &res)
-	if res.Name == name {
-		fmt.Println("This vote arleady exists: " + name)
-		fmt.Println(res)
-		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
-	}
-
-	//build the marble json string manually
-	res.Name = name
-	res.Timestamp = makeTimestamp()
-	res.Count = 0 
-	res.Users = []string
-	
-	err = stub.PutState(name, []byte(res)) //store marble with id as key
+	allvotes.Votes = append(allvotes.Votes, open) //append to open trades
+	fmt.Println("! appended open to trades")
+	jsonAsBytes, _ = json.Marshal(allvotes)
+	err = stub.PutState(voteIndexStr, jsonAsBytes) //rewrite open orders
 	if err != nil {
 		return nil, err
 	}
-
-	//get the marble index
-	votesAsBytes, err := stub.GetState(voteIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get vote index")
-	}
-	var voteIndex []string
-	json.Unmarshal(votesAsBytes, &voteIndex) //un stringify it aka JSON.parse()
-
-	//append
-	voteIndex = append(voteIndex, name) //add marble name to index list
-	fmt.Println("! vote index: ", voteIndex)
-	jsonAsBytes, _ := json.Marshal(voteIndex)
-	err = stub.PutState(voteIndexStr, jsonAsBytes) //store name of marble
-
-	fmt.Println("- end init scrutin")
+	fmt.Println("- end open trade")
 	return nil, nil
 }
 
