@@ -181,14 +181,14 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 // ============================================================================================================================
 // Read - read all oepenviews from chaincode state
 // ============================================================================================================================
-func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) (AllScrutinViews, error) {
 	var err error
 
 	valAsbytes, err := stub.GetState(openScrutinStr)
 	if err != nil {
 		return nil, errors.New("Failed to get marble index")
 	}
-	var marbleIndex []string
+	var marbleIndex AllScrutinViews{}
 	json.Unmarshal(valAsbytes, &marbleIndex) //un stringify it aka JSON.parse()
 
 	return marbleIndex, nil //send it onward
