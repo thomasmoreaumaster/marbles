@@ -335,12 +335,14 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		fmt.Println(res)
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
-	users := []string("")
+
+	var users []string
+	usersBytes, _ := json.Marshal(&users)
 	timestamp := makeTimestamp() //use timestamp as an ID
 	count := 0
 
 	//build the marble json string manually
-	str := `{"name": "` + name + `", "users": "` + users + `","timestamp": "` + timestamp + `", "count": "` + count + `"}`
+	str := `{"name": "` + name + `", "users": "` + usersBytes + `","timestamp": "` + timestamp + `", "count": "` + count + `"}`
 	err = stub.PutState(name, []byte(str)) //store marble with id as key
 	if err != nil {
 		return nil, err
