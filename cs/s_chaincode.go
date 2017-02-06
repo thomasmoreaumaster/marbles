@@ -241,8 +241,12 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	}
 
 	//build the marble json string manually
-	str := `{"name": "` + name + `", "description": "` + description + `", "votes": "` + votes + `", "user": "` + user + `"}`
-	err = stub.PutState(name, []byte(str)) //store marble with id as key
+	res.Name := name
+	res.Description := description
+	res.Votes := votes
+	res.User:= user
+	
+	err = stub.PutState(name, []byte(res)) //store marble with id as key
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +334,7 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	}
 	res := Scrutin{}
 	json.Unmarshal(scrutinAsBytes, &res) //un stringify it aka JSON.parse()
-	res.Votes = append(res.Votes, res)   //change the user
+	res.Votes = append(res.Votes, open)  //change the user
 
 	jsonAsBytes, _ := json.Marshal(res)
 	err = stub.PutState(args[1], jsonAsBytes) //rewrite the marble with id as key
