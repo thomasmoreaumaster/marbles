@@ -181,7 +181,7 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 // ============================================================================================================================
 // Read - read all oepenviews from chaincode state
 // ============================================================================================================================
-func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) (AllScrutinViews, error) {
+func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) ([]AnOpenScrutin, error) {
 	var err error
 
 	valAsbytes, err := stub.GetState(openScrutinStr)
