@@ -316,7 +316,8 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 
 	open := AVote{}
 	open.Name = args[0]
-	var empty = []string
+	var empty []string
+
 	open.Users = empty
 	open.Count = 0
 	open.Timestamp = makeTimestamp() //use timestamp as an ID
