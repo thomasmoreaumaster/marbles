@@ -241,11 +241,11 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	}
 
 	//build the marble json string manually
-	res.Name := name
-	res.Description := description
-	res.Votes := votes
-	res.User:= user
-	
+	res.Name = name
+	res.Description = description
+	res.Votes = votes
+	res.User = user
+
 	err = stub.PutState(name, []byte(res)) //store marble with id as key
 	if err != nil {
 		return nil, err
