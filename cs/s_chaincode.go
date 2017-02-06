@@ -317,7 +317,7 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 
 	//	0        1      2     3      4      5       6
 	//["bob", "blue", "16", "red", "16"] *"blue", "35*
-	if len(args) != 1 {
+	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting like 3")
 	}
 
