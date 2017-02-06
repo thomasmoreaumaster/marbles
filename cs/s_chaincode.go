@@ -149,6 +149,8 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Handle different functions
 	if function == "read" { //read a variable
 		return t.read(stub, args)
+	} else if function == "read_opened" { //read a variable
+		return t.read_opened(stub, args)
 	}
 	fmt.Println("query did not find func: " + function) //error
 
@@ -171,6 +173,20 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	if err != nil {
 		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
 		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil //send it onward
+}
+
+// ============================================================================================================================
+// Read - read all oepenviews from chaincode state
+// ============================================================================================================================
+func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+
+	valAsbytes, err := stub.GetState(openScrutinStr)
+	if err != nil {
+		return fail, errors.New("Failed to get marble index")
 	}
 
 	return valAsbytes, nil //send it onward
