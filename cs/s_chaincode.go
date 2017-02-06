@@ -340,7 +340,7 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	jsonAsBytes, _ := json.Marshal(res)
 	err = stub.PutState(args[1], jsonAsBytes) //rewrite the marble with id as key
 	if err != nil {
-		return nil, errors.New("Failed to do stuff")
+		return nil, err
 	}
 
 	fmt.Println("- end set user")
