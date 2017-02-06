@@ -225,7 +225,7 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	name := args[0]
 	description := strings.ToLower(args[1])
 	user := strings.ToLower(args[2])
-	var votes []Votes
+	var votes []AVote
 
 	//check if marble already exists
 	scrutinAsBytes, err := stub.GetState(name)
