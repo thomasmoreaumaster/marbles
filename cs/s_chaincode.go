@@ -20,9 +20,10 @@ var openScrutinStr = "_openscrutins"  //name for the key/value that will store a
 var voteIndexStr = "_voteindex"       //name for the key/value that will store all votes
 
 type Scrutin struct {
-	Name        string `json:"name"` //the fieldtags are needed to keep case from bouncing around
-	Description string `json:"description"`
-	User        string `json:"user"`
+	Name        string  `json:"name"` //the fieldtags are needed to keep case from bouncing around
+	Description string  `json:"description"`
+	User        string  `json:"user"`
+	Votes       []AVote `json:"votes"`
 }
 
 type AnOpenScrutin struct {
@@ -149,8 +150,6 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	// Handle different functions
 	if function == "read" { //read a variable
 		return t.read(stub, args)
-	} else if function == "read_opened" { //read a variable
-		return t.read_opened(stub, args)
 	}
 	fmt.Println("query did not find func: " + function) //error
 
@@ -176,22 +175,6 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	}
 
 	return valAsbytes, nil //send it onward
-}
-
-// ============================================================================================================================
-// Read - read all oepenviews from chaincode state
-// ============================================================================================================================
-func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []string) ([]AnOpenScrutin, error) {
-	var err error
-
-	valAsbytes, err := stub.GetState(openScrutinStr)
-	if err != nil {
-		return nil, errors.New("Failed to get marble index")
-	}
-	var marbleIndex AllScrutinViews
-	json.Unmarshal(valAsbytes, &marbleIndex) //un stringify it aka JSON.parse()
-
-	return marbleIndex, nil //send it onward
 }
 
 // ============================================================================================================================
@@ -242,6 +225,7 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	name := args[0]
 	description := strings.ToLower(args[1])
 	user := strings.ToLower(args[2])
+	var votes AllVotes
 
 	//check if marble already exists
 	scrutinAsBytes, err := stub.GetState(name)
@@ -257,7 +241,7 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	}
 
 	//build the marble json string manually
-	str := `{"name": "` + name + `", "description": "` + description + `", "user": "` + user + `"}`
+	str := `{"name": "` + name + `", "description": "` + description + `", "votes": "` + votes + `", "user": "` + user + `"}`
 	err = stub.PutState(name, []byte(str)) //store marble with id as key
 	if err != nil {
 		return nil, err
@@ -339,26 +323,23 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	open.Users = empty
 	open.Count = 0
 	open.Timestamp = makeTimestamp() //use timestamp as an ID
-	fmt.Println("- start open trade")
-	jsonAsBytes, _ := json.Marshal(open)
-	err = stub.PutState("_debug1", jsonAsBytes)
 
-	//get the open trade struct
-	votesAsBytes, err := stub.GetState(voteIndexStr)
+	scrutinAsBytes, err := stub.GetState(args[1])
 	if err != nil {
-		return nil, errors.New("Failed to get openscrutin")
+		return nil, errors.New("Failed to get thing")
 	}
-	var allvotes = AllVotes{}
-	json.Unmarshal(votesAsBytes, &allvotes) //un stringify it aka JSON.parse()
+	res := Scrutin{}
+	json.Unmarshal(scrutinAsBytes, &res) //un stringify it aka JSON.parse()
+	res.Votes = append(res.Votes, res)   //change the user
 
-	allvotes.Votes = append(allvotes.Votes, open) //append to open trades
-	fmt.Println("! appended open to trades")
-	jsonAsBytes, _ = json.Marshal(allvotes)
-	err = stub.PutState(voteIndexStr, jsonAsBytes) //rewrite open orders
+	jsonAsBytes, _ := json.Marshal(res)
+	err = stub.PutState(args[1], jsonAsBytes) //rewrite the marble with id as key
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("- end open trade")
+
+	fmt.Println("- end set user")
+
 	return nil, nil
 }
 
