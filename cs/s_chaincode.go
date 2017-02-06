@@ -37,7 +37,7 @@ type AllScrutinViews struct {
 
 type AVote struct {
 	Name      string   `json:"name"`      //the fieldtags are needed to keep case from bouncing around
-	Users     []string `json:"users"`      //user who created the open trade order
+	Users     []string `json:"users"`     //user who created the open trade order
 	Timestamp int64    `json:"timestamp"` //utc timestamp of creation
 	Count     int      `json:"count"`
 }
@@ -319,26 +319,26 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	if len(args[0]) <= 0 {
 		return nil, errors.New("1st argument must be a non-empty string")
 	}
-	
+
 	name := args[0]
-	
+
 	//check if marble already exists
 	voteAsBytes, err := stub.GetState(name)
 	if err != nil {
 		return nil, errors.New("Failed to get vote name")
 	}
 	res := AVote{}
-	
+
 	json.Unmarshal(voteAsBytes, &res)
 	if res.Name == name {
 		fmt.Println("This vote arleady exists: " + name)
 		fmt.Println(res)
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
-	users := []string
+	var users []string
 	timestamp = makeTimestamp() //use timestamp as an ID
 	count := 0
-	
+
 	//build the marble json string manually
 	str := `{"name": "` + name + `", "users": "` + users + `","timestamp": "` + timestamp + `", "count": "` + count + `"}`
 	err = stub.PutState(name, []byte(str)) //store marble with id as key
@@ -363,7 +363,6 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	fmt.Println("- end init scrutin")
 	return nil, nil
 }
-
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
