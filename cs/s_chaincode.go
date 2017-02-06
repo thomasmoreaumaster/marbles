@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -247,8 +246,6 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 // ============================================================================================================================
 func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	var will_size int
-	var trade_away Description
 
 	//	0        1      2     3      4      5       6
 	//["bob", "blue", "16", "red", "16"] *"blue", "35*
