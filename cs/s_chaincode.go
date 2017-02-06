@@ -335,7 +335,7 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		fmt.Println(res)
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
-	users := []string()
+	users := []string("")
 	timestamp := makeTimestamp() //use timestamp as an ID
 	count := 0
 
