@@ -186,7 +186,7 @@ func (t *SimpleChaincode) read_opened(stub shim.ChaincodeStubInterface, args []s
 
 	valAsbytes, err := stub.GetState(openScrutinStr)
 	if err != nil {
-		return fail, errors.New("Failed to get marble index")
+		return err, errors.New("Failed to get marble index")
 	}
 
 	return valAsbytes, nil //send it onward
