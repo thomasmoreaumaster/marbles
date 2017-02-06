@@ -43,7 +43,7 @@ type AVote struct {
 }
 
 type AllVotes struct {
-	Votes []Vote `json:"votes"`
+	Votes []AVote `json:"votes"`
 }
 
 // ============================================================================================================================
