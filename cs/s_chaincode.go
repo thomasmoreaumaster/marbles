@@ -17,7 +17,7 @@ type SimpleChaincode struct {
 
 var scrutinIndexStr = "_scrutinindex" //name for the key/value that will store a list of all known marbles
 var openScrutinStr = "_openscrutins"  //name for the key/value that will store all open trades
-var voteIndexStr = "_voteindex"       //name for the key/value that will store all votes
+//var voteIndexStr = "_voteindex"       //name for the key/value that will store all votes
 
 type Scrutin struct {
 	Name        string  `json:"name"` //the fieldtags are needed to keep case from bouncing around
@@ -43,9 +43,9 @@ type AVote struct {
 	Count     int      `json:"count"`
 }
 
-type AllVotes struct {
+/*type AllVotes struct {
 	Votes []AVote `json:"votes"`
-}
+}*/
 
 // ============================================================================================================================
 // Main
@@ -127,9 +127,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.init_scrutin(stub, args)
 	} else if function == "open_scrutin" { //create a new trade order
 		return t.open_scrutin(stub, args)
-	} else if function == "init_vote" { //create a new marble
+	} /*else if function == "init_vote" { //create a new marble
 		return t.init_vote(stub, args)
-	} /*else if function == "perform_view" { //forfill an open trade order
+	} else if function == "perform_view" { //forfill an open trade order
 		res, err := t.perform_view(stub, args)
 		cleanScrutins(stub) //lets clean just in case
 		return res, err
@@ -306,45 +306,6 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 		return nil, err
 	}
 	fmt.Println("- end open trade")
-	return nil, nil
-}
-
-// ============================================================================================================================
-// Init Marble - create a new marble, store into chaincode state
-// ============================================================================================================================
-func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var err error
-
-	//	0        1      2     3      4      5       6
-	//["bob", "blue", "16", "red", "16"] *"blue", "35*
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting like 3")
-	}
-
-	open := AVote{}
-	open.Name = args[0]
-	var empty []string
-
-	open.Users = empty
-	open.Count = 0
-	open.Timestamp = makeTimestamp() //use timestamp as an ID
-
-	scrutinAsBytes, err := stub.GetState(args[1])
-	if err != nil {
-		return nil, errors.New("Failed to get thing")
-	}
-	res := Scrutin{}
-	json.Unmarshal(scrutinAsBytes, &res) //un stringify it aka JSON.parse()
-	res.Votes = append(res.Votes, open)  //change the user
-
-	jsonAsBytes, _ := json.Marshal(res)
-	err = stub.PutState(args[1], jsonAsBytes) //rewrite the marble with id as key
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("- end set user")
-
 	return nil, nil
 }
 
