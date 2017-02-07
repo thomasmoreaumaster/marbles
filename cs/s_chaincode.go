@@ -127,9 +127,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.init_scrutin(stub, args)
 	} else if function == "open_scrutin" { //create a new trade order
 		return t.open_scrutin(stub, args)
-	} /*else if function == "init_vote" { //create a new marble
+	} else if function == "init_vote" { //create a new marble
 		return t.init_vote(stub, args)
-	} else if function == "perform_view" { //forfill an open trade order
+	} /*else if function == "perform_view" { //forfill an open trade order
 		res, err := t.perform_view(stub, args)
 		cleanScrutins(stub) //lets clean just in case
 		return res, err
@@ -199,19 +199,17 @@ func (t *SimpleChaincode) Write(stub shim.ChaincodeStubInterface, args []string)
 }
 
 // ============================================================================================================================
-// Init Marble - create a new marble, store into chaincode state
+// Init Scrutin - create a new scrutin, store into chaincode state, update indexes
 // ============================================================================================================================
 func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-
-	//   0       1       2     3
-	// "asdf", "blue", "35", "bob"
+	// "nameSccrutin", "descriptionScrutin", "User"
 	if len(args) != 3 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 4")
+		return nil, errors.New("Incorrect number of arguments. Expecting 3")
 	}
 
 	//input sanitation
-	fmt.Println("- start init marble")
+	fmt.Println("- start init scrutin")
 	if len(args[0]) <= 0 {
 		return nil, errors.New("1st argument must be a non-empty string")
 	}
@@ -227,7 +225,7 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	user := strings.ToLower(args[2])
 	var votes []AVote
 
-	//check if marble already exists
+	//check if scrutin already exists
 	scrutinAsBytes, err := stub.GetState(name)
 	if err != nil {
 		return nil, errors.New("Failed to get scrutin name")
@@ -268,6 +266,90 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 
 	fmt.Println("- end init scrutin")
 	return nil, nil
+}
+
+// ============================================================================================================================
+// Init Vote - create a new vote option for a given scrutin, store into chaincode state, update scrutin
+// ============================================================================================================================
+func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	// "nameScrutin", "nameVote"
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	}
+
+	//input sanitation
+	fmt.Println("- start init vote")
+	if len(args[0]) <= 0 {
+		return nil, errors.New("1st argument must be a non-empty string")
+	}
+	if len(args[1]) <= 0 {
+		return nil, errors.New("2nd argument must be a non-empty string")
+	}
+
+	nameScrutin := args[0]
+	nameVote := args[1]
+
+	//check if scrutin already exists
+	voteAsBytes, err := stub.GetState(nameVote)
+	if err != nil {
+		return nil, errors.New("Failed to get vote name")
+	}
+	res := AVote{}
+	json.Unmarshal(voteAsBytes, &res)
+	if res.Name == nameVote {
+		fmt.Println("This Vote arleady exists: " + nameVote)
+		fmt.Println(res)
+		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
+	}
+
+	var users []string
+
+	res.Name = nameVote
+	res.Users = users
+	res.Timestamp = makeTimestamp() //use timestamp as an ID
+	res.count = 0
+
+	jsonsAsBytes, _ := json.Marshal(res)
+	err = stub.PutState(nameVote, jsonsAsBytes) //rewrite the marble with id as key
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Vote added")
+
+	//Get the scrutin and add the vote option
+	scrutinAsBytes, err := stub.GetState(nameScrutin)
+	if err != nil {
+		return nil, errors.New("Failed to get scrutin name")
+	}
+	scrutin := Scrutin{}
+	json.Unmarshal(scrutinAsBytes, &scrutin)
+	if scrutin.Name == nameScrutin {
+		//Update scrutin by adding vote option
+		scrutin.Votes = append(scrutin.Votes, res)
+		scrutinUAsBytes, _ := json.Marshal(scrutin)
+		err = stub.PutState(nameScrutin, scrutinUAsBytes) //store name of marble
+		fmt.Println("scrutin updated")
+
+	}
+
+	//get the marble index
+	/*scrutinsAsBytes, err := stub.GetState(scrutinIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get scrutin index")
+	}
+	var scrutinIndex []string
+	json.Unmarshal(scrutinsAsBytes, &scrutinIndex) //un stringify it aka JSON.parse()
+
+	//append
+	scrutinIndex = append(scrutinIndex, name) //add marble name to index list
+	fmt.Println("! scrutin index: ", scrutinIndex)
+	jsonAsBytes, _ := json.Marshal(scrutinIndex)
+	err = stub.PutState(scrutinIndexStr, jsonAsBytes) //store name of marble
+	*/
+	fmt.Println("- end init vote")
+	return nil, nil
+
 }
 
 // ============================================================================================================================
