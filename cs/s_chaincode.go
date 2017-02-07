@@ -408,7 +408,7 @@ func (t *SimpleChaincode) add_vote(stub shim.ChaincodeStubInterface, args []stri
 	json.Unmarshal(voteAsBytes, &vote)
 	if vote.Name == nameVote {
 		vote.Users = append(vote.Users, nameUser)
-		vote.Count = vote.Count + 1
+		//vote.Count = vote.Count + 1
 		voteUAsBytes, _ := json.Marshal(vote)
 		err = stub.PutState(nameVote, voteUAsBytes) //store name of marble
 		fmt.Println("vote updated")
