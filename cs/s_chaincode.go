@@ -94,12 +94,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 
-	var votes AllVotes
+	/*var votes AllVotes
 	jsonAsBytes, _ = json.Marshal(votes) //clear the votes struct
 	err = stub.PutState(voteIndexStr, jsonAsBytes)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	return nil, nil
 }
