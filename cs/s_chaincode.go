@@ -332,21 +332,6 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		fmt.Println("scrutin updated")
 
 	}
-
-	//get the marble index
-	/*scrutinsAsBytes, err := stub.GetState(scrutinIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get scrutin index")
-	}
-	var scrutinIndex []string
-	json.Unmarshal(scrutinsAsBytes, &scrutinIndex) //un stringify it aka JSON.parse()
-
-	//append
-	scrutinIndex = append(scrutinIndex, name) //add marble name to index list
-	fmt.Println("! scrutin index: ", scrutinIndex)
-	jsonAsBytes, _ := json.Marshal(scrutinIndex)
-	err = stub.PutState(scrutinIndexStr, jsonAsBytes) //store name of marble
-	*/
 	fmt.Println("- end init vote")
 	return nil, nil
 
