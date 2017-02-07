@@ -308,7 +308,7 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 	res.Name = nameVote
 	res.Users = users
 	res.Timestamp = makeTimestamp() //use timestamp as an ID
-	res.count = 0
+	res.Count = 0
 
 	jsonsAsBytes, _ := json.Marshal(res)
 	err = stub.PutState(nameVote, jsonsAsBytes) //rewrite the marble with id as key
