@@ -129,6 +129,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.open_scrutin(stub, args)
 	} else if function == "init_vote" { //create a new marble
 		return t.init_vote(stub, args)
+	} else if function == "add_vote" { //create a new marble
+		return t.add_vote(stub, args)
 	} /*else if function == "perform_view" { //forfill an open trade order
 		res, err := t.perform_view(stub, args)
 		cleanScrutins(stub) //lets clean just in case
@@ -376,6 +378,44 @@ func (t *SimpleChaincode) open_scrutin(stub shim.ChaincodeStubInterface, args []
 	return nil, nil
 }
 
+// ============================================================================================================================
+// Add vote - Add user at a vote and count++
+// ============================================================================================================================
+func (t *SimpleChaincode) add_vote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	// "nameVote", "nameUser"
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	}
+
+	//input sanitation
+	fmt.Println("- start init vote")
+	if len(args[0]) <= 0 {
+		return nil, errors.New("1st argument must be a non-empty string")
+	}
+	if len(args[1]) <= 0 {
+		return nil, errors.New("2nd argument must be a non-empty string")
+	}
+
+	nameVote := args[0]
+	nameUser := args[1]
+
+	voteAsBytes, err := stub.GetState(nameVote)
+	if err != nil {
+		return nil, errors.New("Failed to get vote name")
+	}
+	vote := AVote{}
+	json.Unmarshal(voteAsBytes, &vote)
+	if vote.Name == nameVote {
+		vote.Users = append(vote.Users, nameUser)
+		vote.Count = vote.Count + 1
+		voteUAsBytes, _ := json.Marshal(vote)
+		err = stub.PutState(nameVote, voteUAsBytes) //store name of marble
+		fmt.Println("vote updated")
+	}
+	fmt.Println("- end updated vote")
+	return nil, nil
+}
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
