@@ -248,7 +248,7 @@ func (t *SimpleChaincode) init_asso(stub shim.ChaincodeStubInterface, args []str
 	json.Unmarshal(assoAsBytes, &asso)
 	if asso.Name == nameAsso {
 		fmt.Println("This asso arleady exists: " + nameAsso)
-		fmt.Println(res)
+		fmt.Println(asso)
 		return nil, errors.New("This asso arleady exists") //all stop a marble by this name exists
 	}
 
