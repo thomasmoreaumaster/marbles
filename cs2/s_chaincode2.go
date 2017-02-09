@@ -44,12 +44,18 @@ type AnOpenScrutin struct {
 type AllScrutinViews struct {
 	OpenScrutins []AnOpenScrutin `json:"open_scrutins"`
 }
+type Bulletin struct {
+	Name   string `json:"name"`   //the fieldtags are needed to keep case from bouncing around
+	Vote   string `json:"vote"`   //user who created the open trade order
+	Votant string `json:"votant"` //the fieldtags are needed to keep case from bouncing around
 
+}
 type AVote struct {
-	Name      string   `json:"name"`      //the fieldtags are needed to keep case from bouncing around
-	Users     []string `json:"users"`     //user who created the open trade order
-	Timestamp int64    `json:"timestamp"` //utc timestamp of creation
-	Count     int      `json:"count"`
+	Name      string     `json:"name"`      //the fieldtags are needed to keep case from bouncing around
+	Scrutin   string     `json:"scrutin"`   //the fieldtags are needed to keep case from bouncing around
+	Bulletins []Bulletin `json:"bulletins"` //user who created the open trade order
+	Timestamp int64      `json:"timestamp"` //utc timestamp of creation
+	Count     int        `json:"count"`
 }
 
 /*type AllVotes struct {
@@ -388,10 +394,11 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
 
-	var users []string
+	var bulletins []Bulletin
 
 	res.Name = nameVote
-	res.Users = users
+	res.Scrutin = nameScrutin
+	res.Bulletins = bulletins
 	res.Timestamp = makeTimestamp() //use timestamp as an ID
 	res.Count = 0
 
@@ -490,8 +497,13 @@ func (t *SimpleChaincode) add_vote(stub shim.ChaincodeStubInterface, args []stri
 	vote := AVote{}
 	json.Unmarshal(voteAsBytes, &vote)
 	if vote.Name == nameVote {
-		vote.Users = append(vote.Users, nameUser)
+		bulletin := Bulletin{}
+		bulletin.Name = "B" + vote.Scrutin + nameUser
+		bulletin.Votant = nameUser
+		bulletin.Vote = nameVote
 		vote.Count = vote.Count + 1
+		bulletinUAsBytes, _ := json.Marshal(bulletin)
+		err = stub.PutState(nameVote, bulletinUAsBytes) //store name of marble
 		voteUAsBytes, _ := json.Marshal(vote)
 		err = stub.PutState(nameVote, voteUAsBytes) //store name of marble
 		fmt.Println("vote updated")
