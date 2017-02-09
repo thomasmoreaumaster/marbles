@@ -497,13 +497,16 @@ func (t *SimpleChaincode) add_vote(stub shim.ChaincodeStubInterface, args []stri
 	vote := AVote{}
 	json.Unmarshal(voteAsBytes, &vote)
 	if vote.Name == nameVote {
+		nameBulletin := "B" + vote.Scrutin + nameUser
 		bulletin := Bulletin{}
-		bulletin.Name = "B" + vote.Scrutin + nameUser
+		bulletin.Name = nameBulletin
 		bulletin.Votant = nameUser
 		bulletin.Vote = nameVote
+
 		vote.Count = vote.Count + 1
+		vote.Bulletins = append(vote.Bulletins, bulletin)
 		bulletinUAsBytes, _ := json.Marshal(bulletin)
-		err = stub.PutState(nameVote, bulletinUAsBytes) //store name of marble
+		err = stub.PutState(nameBulletin, bulletinUAsBytes) //store name of marble
 		voteUAsBytes, _ := json.Marshal(vote)
 		err = stub.PutState(nameVote, voteUAsBytes) //store name of marble
 		fmt.Println("vote updated")
