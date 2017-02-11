@@ -29,10 +29,11 @@ type Asso struct {
 }
 
 type Scrutin struct {
-	Name        string  `json:"name"` //the fieldtags are needed to keep case from bouncing around
-	Description string  `json:"description"`
-	User        string  `json:"user"`
-	Votes       []AVote `json:"votes"`
+	Name        string     `json:"name"` //the fieldtags are needed to keep case from bouncing around
+	Description string     `json:"description"`
+	User        string     `json:"user"`
+	Bulletins   []Bulletin `json:"bulletins"` //user who created the open trade order
+	Votes       []AVote    `json:"votes"`
 }
 
 type AnOpenScrutin struct {
@@ -51,11 +52,10 @@ type Bulletin struct {
 
 }
 type AVote struct {
-	Name      string     `json:"name"`      //the fieldtags are needed to keep case from bouncing around
-	Scrutin   string     `json:"scrutin"`   //the fieldtags are needed to keep case from bouncing around
-	Bulletins []Bulletin `json:"bulletins"` //user who created the open trade order
-	Timestamp int64      `json:"timestamp"` //utc timestamp of creation
-	Count     int        `json:"count"`
+	Name      string `json:"name"`      //the fieldtags are needed to keep case from bouncing around
+	Scrutin   string `json:"scrutin"`   //the fieldtags are needed to keep case from bouncing around
+	Timestamp int64  `json:"timestamp"` //utc timestamp of creation
+	Count     int    `json:"count"`
 }
 
 /*type AllVotes struct {
@@ -330,9 +330,12 @@ func (t *SimpleChaincode) init_scrutin(stub shim.ChaincodeStubInterface, args []
 	}
 
 	//build the marble json string manually
+	var bulletins []Bulletin
+
 	res.Name = name
 	res.Description = description
 	res.Votes = votes
+	res.Bulletins = bulletins
 	res.User = user
 
 	jsonsAsBytes, _ := json.Marshal(res)
@@ -394,11 +397,8 @@ func (t *SimpleChaincode) init_vote(stub shim.ChaincodeStubInterface, args []str
 		return nil, errors.New("This vote arleady exists") //all stop a marble by this name exists
 	}
 
-	var bulletins []Bulletin
-
 	res.Name = nameVote
 	res.Scrutin = nameScrutin
-	res.Bulletins = bulletins
 	res.Timestamp = makeTimestamp() //use timestamp as an ID
 	res.Count = 0
 
@@ -498,15 +498,36 @@ func (t *SimpleChaincode) add_vote(stub shim.ChaincodeStubInterface, args []stri
 	json.Unmarshal(voteAsBytes, &vote)
 	if vote.Name == nameVote {
 		nameBulletin := "B" + vote.Scrutin + nameUser
+		BulletinAsBytes, err := stub.GetState(nameBulletin)
+		if err != nil {
+			return nil, errors.New("Failed to get bulletin name")
+		}
 		bulletin := Bulletin{}
+		json.Unmarshal(BulletinAsBytes, &bulletin)
+		if bulletin.Name == nameBulletin {
+			nameAVote := bulletin.Vote
+			AVoteAsBytes, err := stub.GetState(nameAVote)
+			if err != nil {
+				return nil, errors.New("Failed to get avote name")
+			}
+			avote := AVote{}
+			json.Unmarshal(AVoteAsBytes, &avote)
+			if avote.Name == nameAVote {
+				avote.Count = avote.Count - 1
+			}
+			AVoteUAsBytes, _ := json.Marshal(avote)
+			err = stub.PutState(nameAVote, AVoteUAsBytes) //store name of marble
+
+		}
+		fmt.Println(nameBulletin)
 		bulletin.Name = nameBulletin
 		bulletin.Votant = nameUser
 		bulletin.Vote = nameVote
 
-		vote.Count = vote.Count + 1
-		vote.Bulletins = append(vote.Bulletins, bulletin)
 		bulletinUAsBytes, _ := json.Marshal(bulletin)
 		err = stub.PutState(nameBulletin, bulletinUAsBytes) //store name of marble
+
+		vote.Count = vote.Count + 1
 		voteUAsBytes, _ := json.Marshal(vote)
 		err = stub.PutState(nameVote, voteUAsBytes) //store name of marble
 		fmt.Println("vote updated")
